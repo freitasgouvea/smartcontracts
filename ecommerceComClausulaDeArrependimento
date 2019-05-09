@@ -1,0 +1,241 @@
+pragma solidity 0.5.1;
+
+contract Ecommerce {
+    
+    //fases da transação
+    
+    enum State { Oferta,
+        Cancelado ,
+        Confirmado , 
+        Enviado , 
+        Entregue , 
+        Arrependido , 
+        Devolvido , 
+        Retornado , 
+        Finalizado 
+        }
+    State public state;
+    
+    //detalhes do contrato
+    
+    address payable public idvendedor;
+    address payable public idcomprador;
+    address payable public intermediador;
+    uint public valorDoProduto;
+    string public produto;
+    uint256 public dataDaCompra;    
+    uint256 public dataDoEnvio;
+    uint256 public dataDaEntrega;
+    uint256 public dataDoArrependimento;
+    uint256 public dataDaDevolucao;
+    uint256 public dataDoRetorno;
+
+    constructor(
+        uint  _preco, 
+        address payable _vendedor,
+        string memory _produto) 
+        public payable
+        {
+        idvendedor = _vendedor;
+        intermediador = msg.sender;
+        valorDoProduto = _preco;
+        produto = _produto;
+        state = State.Oferta;
+        }
+    
+    //modificadores
+    
+    modifier condition(bool _condition) {
+        require(_condition);
+        _;
+    }
+
+    modifier onlyUber() {
+        require(msg.sender == intermediador,
+            "Somente o intermediador pode fazer isso."
+        );
+        _;
+    }
+
+    modifier onlyBuyer() {
+        require(msg.sender == idcomprador,
+            "Somente o comprador pode fazer isso."
+        );
+        _;
+    }
+
+    modifier onlySeller() {
+        require(msg.sender == idvendedor,
+            "Somente o vendedor pode fazer isso."
+        );
+        _;
+    }
+
+    modifier inState(State _state) {
+        require(state == _state,
+            "Invalid state."
+        );
+        _;
+    }
+    
+    //Eventos durante o contrato
+    
+    event OfertaCancelada();
+    event CompraConfirmada();
+    event Arrependido();
+    event AceitoPeloComprador();
+    event ProdutoDevolvidoOk();
+    event ProdutoDevolvidoComDefeito();
+    event ProduroNaoDevolvido();
+    
+    //Oferta cancelada pelo vendedor
+    
+    function retirarOferta()
+        public
+        onlySeller
+        inState(State.Oferta)
+        {
+        emit OfertaCancelada();
+        state = State.Cancelado;
+    }
+    
+    //Confirmacao da compra e Pagamento pelo comprador
+    
+    function confirmarCompra()
+        public
+        inState(State.Oferta)
+        condition(msg.value == valorDoProduto)
+        payable
+        {
+        emit CompraConfirmada();
+        idcomprador = msg.sender;
+        state = State.Confirmado;
+        dataDaCompra = block.timestamp;
+    }
+
+    //Logistica de entrega
+    
+    function UBERenviadoPeloVendedor() 
+        public 
+        onlyUber
+        inState(State.Confirmado)
+        {
+        state = State.Enviado;
+        dataDoEnvio = block.timestamp;
+    }
+
+    function UBERentregaAoComprador() 
+        public 
+        onlyUber
+        inState(State.Enviado)   
+        {
+        state = State.Entregue;
+        dataDaEntrega = block.timestamp;
+    }
+    
+    //contagem do direito de arrependimento
+    
+    function tempoParaoArrependimento () 
+        public 
+        view 
+        returns(uint256) 
+        {
+        return (dataDaEntrega+604800 - block.timestamp);
+    }
+    
+    //exercicio do arrependimento pelo comprador
+
+    function direitoDeArrependimento()
+        public
+        onlyBuyer
+        inState(State.Entregue)
+        {
+        require(dataDaEntrega+604800 >= block.timestamp);
+        emit Arrependido();
+        state = State.Arrependido;
+        dataDoArrependimento = block.timestamp;
+    }
+
+    //conclusao da transacao pelo comprador sem arrependimento   
+    
+    function aceitarProduto() 
+        public
+        onlyBuyer
+        inState(State.Entregue)
+        {
+        require(dataDaEntrega+604800 >= block.timestamp);
+        emit AceitoPeloComprador();
+        state = State.Finalizado;
+        idvendedor.transfer(address(this).balance);
+    }
+    
+    //conclusao da transacao pelo vendedor sem arrependimento   
+    
+    function prazoExpirado() 
+        public
+        onlySeller
+        inState(State.Entregue)
+        {
+        require(dataDaEntrega+604800 <= block.timestamp);
+        emit AceitoPeloComprador();
+        state = State.Finalizado;
+        idvendedor.transfer(address(this).balance);
+    }
+    
+    //Logistica reversa
+    
+    function UBERdevolvidoPeloComprador() 
+        public
+        onlyUber
+        inState(State.Arrependido) 
+        {
+        state = State.Devolvido;
+        dataDaDevolucao = block.timestamp;
+    }
+
+    function UBERdevolvidoAoVendedor() 
+        public
+        onlyUber
+        inState(State.Devolvido)
+        {
+        state = State.Retornado;
+        dataDoRetorno = block.timestamp;
+    }
+
+    //conclusao da transacao com arrependimento 
+
+    function devolucaoEmOrdem() 
+        public
+        onlySeller
+        inState(State.Retornado)
+        payable
+        {
+        emit ProdutoDevolvidoOk();
+        state = State.Finalizado;
+        idcomprador.transfer(address(this).balance);
+    }
+    
+    function devolucaoForaDoPrazo() 
+        public
+        onlySeller
+        inState(State.Arrependido)
+        payable
+        {
+        require(dataDoArrependimento+604800 >= block.timestamp);
+        emit ProduroNaoDevolvido();
+        state = State.Finalizado;
+        idvendedor.transfer(address(this).balance);
+    }
+    
+    function devolucaoComDefeito() 
+        public
+        onlySeller
+        inState(State.Retornado)
+        payable
+        {
+        emit ProdutoDevolvidoComDefeito();
+        state = State.Finalizado;
+        idvendedor.transfer(address(this).balance);
+    }
+    
+}

@@ -43,7 +43,6 @@ contract TransportePrivado {
         //require (driverLicence) hash da cnh
         driverLicence = _driverLicence;
         driver = msg.sender;
-        state = State.Avaiable;
         numberOfTrips = 0;
         //averageEvaluation = 5;
         balance = 0;

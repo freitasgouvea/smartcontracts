@@ -32,6 +32,7 @@ contract TransportePrivado {
     event DriverAutorized();
     event TripCompleted();
     event DriverPayed();
+    event DriverSuspended();
     event CancellationIncourse();
     event intermediaryReativateContract();
     event ContractFinished();
@@ -88,13 +89,19 @@ contract TransportePrivado {
         balance = - msg.value;
     }
     
-    function driverCancellContract() inState(State.Avaiable) public payable {
+    function suspendDriver() inState(State.Avaiable) public  {
+        require(msg.sender == intermediary, "Somente o intermediario pode fazer isso.");
+        state = State.Stoped;
+        emit DriverSuspended();
+    }
+    
+    function driverCancellContract() inState(State.Avaiable) public {
         require(msg.sender == driver, "Somente o motorista pode fazer isso.");
         state = State.Stoped;
         emit CancellationIncourse();
     }
     
-    function reativateContract() inState(State.Stoped) public payable {
+    function reativateContract() inState(State.Stoped) public {
         require(msg.sender == intermediary, "Somente o intermediario pode fazer isso.");
         state = State.Avaiable;
         emit intermediaryReativateContract();
@@ -102,7 +109,7 @@ contract TransportePrivado {
     
     function intermediaryCancellContract() inState(State.Avaiable) public {
         require(msg.sender == intermediary, "Somente o intermediario pode fazer isso.");
-        require(averageEvaluation <= 60);
+        require(averageEvaluation >= 60);
         require(numberOfTrips >= 10);
         require(balance == 0);
         state = State.End;

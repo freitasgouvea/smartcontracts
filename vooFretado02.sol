@@ -1,23 +1,22 @@
+//Autoria de Flavio Freitas
 pragma solidity 0.5.1;
 
 contract VooFretado {
     
-    address payable airComapny;
+    address payable airline;
     uint value;
     uint agencyFee;
-    uint airCompanyFee;
+    uint airlineFee;
     uint public ticketValue;
     uint public numberOfFlight;
     uint public dateOfFlight;
     uint public numberOfTickets;
-    uint public passengerCount = 0;
-    uint public agencyCount = 0;
-    
-    mapping(uint => passenger) public passengers;
-    mapping(uint => agency) public agencies;
 
-    enum State { Created, Open , End }
-    State public state;
+    passenger[] public passengers;
+    agency[] public agencies;
+
+    enum FlightState { Created, Open, End }
+    FlightState public flightState;
     
     // Registrers
     
@@ -38,110 +37,83 @@ contract VooFretado {
     // Constructor
     
     constructor( 
-        address payable _agencyWallet,
         uint _numberOfFlight,
         uint _dateOfFlight,
         uint _ticketValue,
         uint _airCompanyFee,
         uint _agencyFee,
         uint _numberOfTickets
-        ) public payable
-        {
-        airComapny = msg.sender;
+    ) public payable {
+        airline = msg.sender;
         numberOfFlight = _numberOfFlight;
         dateOfFlight = _dateOfFlight;
         ticketValue = _ticketValue;
-        airCompanyFee = _airCompanyFee;
+        airlineFee = _airCompanyFee;
         agencyFee = _agencyFee;
         numberOfTickets = _numberOfTickets;
-        state = State.Open;
+        flightState = FlightState.Open;
     }
 
     // modifiers
 
     modifier onlyAirCompany() {
-        require(msg.sender == airComapny, "Only Air Company can do this");
+        require(msg.sender == airline, "Only Air Company can do this");
         _;
     }
     
-    modifier inState(State _state) {
+    modifier inState(FlightState _state) {
         require(state == _state, "Invalid state.");
         _;
     }
     
     // Registrer Agency
-    
     function registrerAgency(
         address payable agencyWallet, 
-        string memory agencyName,
-        uint passagensVendidas,
-        bool comissaoPaga
-        ) 
-        onlyAirCompany
-        inState(State.Open)
-        public 
-        {
-        agencyCount += 1;
-        agencies[agencyCount] = agency (agencyWallet, agencyName,passagensVendidas = 0 ,comissaoPaga = false);
+        string memory agencyName
+    ) 
+    onlyAirCompany
+    inState(FlightState.Open)
+    public  {
+        agencies.push(agency(agencyWallet, agencyName, 0, false));
     }
     
-    // Ticket Sell
-    
+    // Buy Ticket
     function buyTicket(
         address payable passengerWallet,
         string memory passengerName, 
-        uint agencyId,
-        bool reembolsoPago
-        ) 
-        inState(State.Open)
-        public payable 
-        {
-        require(passengerCount < numberOfTickets, "Voo encerrado.");
+        uint agencyId
+    ) 
+    inState(FlightState.Open)
+    public payable     {
+        require(passengers.length < numberOfTickets, "Voo encerrado.");
         require(msg.value == ticketValue, "Valor incorreto.");
         require(now <= dateOfFlight, "Voo enecerrado");
-        passengerCount + 1;
-        passengers[passengerCount] = passenger(passengerWallet, passengerName, reembolsoPago=false );
-        agencies[agencyId] = agency(passagensVendidas + 1);
+        passengers.push(passenger(passengerWallet, passengerName, false));
+        agency memory sellingAgency = agencies[agencyId];
+        sellingAgency.passagensVendidas = sellingAgency.passagensVendidas + 1;
+        // sellingAgency.passagensVendidas++;
+        // agencies[agencyId].passagensVendidas++;
     }
     
-    // Events in contract
-    
-    //event FlightCancelled();
-    
-    //function cancellFlight()
-        //inState(State.Open)
-        //onlyAirCompany
-        //public
-        //payable
-        //{
-        //emit FlightCancelled();
-        //state = State.End;
-        //passenger.passengerWallet.transfer(address(this).balance/passengerCount);
-        //for (uint i=0; i < passengers.lenght; i++) {
-            //passenger memory passengerCashBack = passeng [i];
-            //if (!passengerCashBack.);
-        //}
-    //}
-    
-    // event FlightClosed();
     
     event FlightArrived();
     
-    function payFlight()
-        inState(State.Open)
+    function flightLanded()
+        inState(FlightState.Open)
         onlyAirCompany
         public
-        payable
-        {
-        emit FlightArrived();
-        state = State.End;
-        airComapny.transfer(address(this).balance*airCompanyFee/100);
-        for (uint i=0; i < agencies.lenght; i++) {
-            agency memory agencyPayFee = agency [i];
-            if (!agencyPayFee.comissaoPaga) {
-                agency.agencyWallet.transfer(address(this).balance*(agencyFee/100));
+    {
+        flightState = FlightState.End;
+        airline.transfer((address(this).balance*airlineFee)/100);
+        uint totalRemainingFee = address(this).balance;
+        for (uint i=0; i < agencies.length; i++) {
+            agency memory agencyReceiving = agency[i];
+            if (!agencyReceiving.comissaoPaga) {
+                uint fee = (ticketValue * agencyFee * agencyReceiving.passagensVendidas)/100;
+                agency.agencyWallet.transfer(fee);
                 agency.comissaoPaga = true;
             }
         }
+        emit FlightArrived();
     }
 }

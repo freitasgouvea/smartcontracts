@@ -102,7 +102,7 @@ contract TransportePrivado {
     
     function intermediaryCancellContract() inState(State.Avaiable) public {
         require(msg.sender == intermediary, "Somente o intermediario pode fazer isso.");
-        require(averageEvaluation == 60);
+        require(averageEvaluation <= 60);
         require(numberOfTrips >= 10);
         require(balance == 0);
         state = State.End;

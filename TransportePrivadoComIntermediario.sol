@@ -9,7 +9,8 @@ contract TransportePrivado {
     uint256 public intermediaryFee;
     uint256 public driverFee;
     uint256 public numberOfTrips;
-    uint256 public averageEvaluation = 100;
+    uint256 totalOfEvaluations;
+    uint256 public averageEvaluation;
     uint256 public balance;
 
     trip [] public listOfTrips;
@@ -68,16 +69,19 @@ contract TransportePrivado {
         state = State.Avaiable;
     }
     
-    //function callForATrip()
+    //function callForATrip();
     
-    //function callForADisputeResolution()
+    //function driverCancellTrip();
+    
+    //function passengerCancellTrip();
     
     function payForATrip(string memory _localOfArrive, uint _driverEvaluation0to100) inState(State.Avaiable) public payable {
         //require(msg.value == valor da corrida )
         require (_driverEvaluation0to100 <= 100, "A avaliacao tem que ser de 0 a 100");
         numberOfTrips += 1;
         listOfTrips.push(trip(msg.sender, _localOfArrive, now, _driverEvaluation0to100, true, msg.value));
-        averageEvaluation = ((((averageEvaluation+_driverEvaluation0to100)*numberOfTrips)/numberOfTrips)/numberOfTrips);
+        totalOfEvaluations += _driverEvaluation0to100;
+        averageEvaluation = totalOfEvaluations/numberOfTrips;
         balance += msg.value;
         emit TripCompleted ();
     }
@@ -113,5 +117,33 @@ contract TransportePrivado {
         require(numberOfTrips >= 10);
         require(balance == 0);
         state = State.End;
+    }
+    
+    //Dispute Resoluyion Events
+    
+    event DisputeReceived();
+    event DisputeRejected();
+    event DisputeSolved();
+    
+    function ZcallForADisputeResolution(uint _disputevalue, uint tripId) public {
+        trip memory disputedTrip = listOfTrips[tripId];
+        uint disputevalue = _disputevalue;
+        require(msg.sender == disputedTrip.passenger, "Somente o passageiro pode fazer isso.");
+        emit DisputeReceived();
+    }
+    
+    function ZrejectDispute(uint tripId) public {
+        require(msg.sender == intermediary, "Somente o intermediario pode fazer isso.");
+        emit DisputeRejected();
+    }
+    
+    function ZreimbursePassenger(uint _arbitrationValue, uint tripId, address _reimburseAddress) public payable {
+        require(msg.sender == intermediary, "Somente o intermediario pode fazer isso.");
+        uint arbitrationValue = _arbitrationValue;
+        address reimburseAddress = _reimburseAddress;
+        trip memory disputedTrip = listOfTrips[tripId];
+        require(_reimburseAddress == disputedTrip.passenger, "Somente o passageiro pode ser ressarcido.");
+        //disputedTrip.passenger.transfer(arbitrationValue);
+        emit DisputeSolved();
     }
 }

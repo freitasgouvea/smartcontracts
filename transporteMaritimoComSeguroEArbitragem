@@ -1,0 +1,144 @@
+pragma solidity 0.5.1;
+
+contract TransporteMaritimoComSeguroEArbitragem {
+    
+    address payable proprietarioDoNavio;
+    address payable armador;
+    address payable arbitro;
+    address payable seguro;
+    uint public dataDePartidaPrevista;
+    uint public dataDeChegadaPrevista;
+    uint public dataDePartida;
+    uint public localDeChegadaPrevisto; //latitude e longitude
+    uint public localDeChegadaPrevisto; //idem
+    uint public dataDeChegada;
+    uint public valorDoNavio;
+    uint public valorDoSeguro;
+    uint public valorTotalDasMercadorias;
+    uint public valorArbitradoDoNavio;
+    uint public valorArbitradoDasMercadorias;
+    uint public valorDoFrete;
+    uint public comissaoDoSeguro;
+    uint public totalDeContainers;
+    uint public numeroDeContainers;
+    uint public taxaPorChegadaAntecipada;
+    uint public multaPorAtraso;
+    uint public multaPorCancelamento;
+    bool arbitragemDoNavio;
+    uint public honorariosDeArbitragem;
+    
+    container [] public listaDeContainers;
+    
+    struct container {
+        address payable walletAfretador;
+        uint valorDaMercadoria;
+        uint valorDoFrete;
+        bool arbitragem;
+        uint valorDaArbitragem;
+    }
+    
+    constructor(
+        address payable _walletDonoDoNavio,
+        address payable seguro,
+        address payable arbitro,
+        uint _dataDePartida,
+        string memory _destino,
+        uint _valorDoAluguelDoContainer,
+        uint _totalDeContainers,
+        uint _comissaoDoDespachante
+        ) public payable
+    {
+        proprietarioDoNavio = msg.sender;
+        arbitro = _walletArbitro;
+        dataDePartidaPrevista = _dataDePartidaPrevista;
+        dataDeChegadaPrevista = _dataDeChegadaPrevista;
+        destino = _destino;
+        totalDeContainers = _totalDeContainers;
+        valorDoFrete = _valorDoFrete0a100;
+        comissaoDoArmador = _comissaoDoArmador0a100;
+    }
+    
+    function calculoDoValorDoFrete() public view returns (uint256) {
+        return valorDoFrete*valorDasMercadorias/100;
+    }
+    
+    function alugarContainer(address payable _walletProprietario,uint _valorDaMercadoria) public payable {
+        require(numeroDeContainers < totalDeContainers, "Embarcacao Completa.");
+        require(msg.value == valorDoFrete*valorDasMercadorias/100, "Valor incorreto.");
+        require(now < dataDePartida, "Embarcacao Completa.");
+        valorDasMercadorias += msg.value;
+        numeroDeContainers += 1;
+        valorDasMercadorias += _valorDaMercadoria;
+        listaDeContainers[numeroDeContainers] = container(_walletProprietario, _produto, _quantidade, _valorDaMercadoria );
+    }
+    
+    function cancelarViagem()
+        public payable {
+        require(msg.sender == despachante, "Somente o despachante pode fazer isso.");
+        container.walletProprietario.transfer(address(this).balance/numeroDeContainers);
+    }
+    
+    function cancelarReserva(
+        ) public payable
+        require (msg.sender == container.walletProprietario);
+        //valorDaMercadoriaCancelada = 
+        //container.valorDaMercadoria;
+    }
+    
+    function calculoDoSeguro() public view returns {
+        
+    }
+    
+    function depositarSeguro() public payable {
+        require (msg.sender == seguro);
+        require (msg.value == valorDoNavio+valorDasMercadorias);
+        valorDoNavio
+    }
+        
+    function armarNavio() public payable {
+        require(msg.sender == proprietarioDoNavio, "Somente o despachante pode fazer isso.");
+        
+    }
+        
+    function navioChegouAoDestino ()
+        public payable {
+        require(msg.sender == proprietarioDoNavio, "Somente o despachante pode fazer isso.");
+        dataDeChegada = now;
+    //if data da chegada >=data da chegada prevista...
+    }
+    
+    function navioDesembarcado ()
+        public payable {
+        require(msg.sender == proprietarioDoNavio, "Somente o despachante pode fazer isso.");
+        seguro.transfer(value*(comissaoDoSeguro/100));
+        proprietarioDoNavio.transfer(address(this).balance);
+    }
+    
+    //Arbitragem
+    
+    function solicitarArbitragemDoNavio () public {
+        require(msg.sender == proprietarioDoNavio);
+        require(msg.value == valorDoNavio+valorDasMercadorias*honorariosDeArbitragem);
+        require(arbitragemDoNavio = false);
+        arbitragemDoNavio = true;
+        disputeObject = valorDoNavio+valorDasMercadorias;
+    }
+    
+    function arbitragemDoNavio (uint _valorDoNavioRecuperado, uint _valorDaMercadoriaRecuperada) public payable {
+        require (msg.sender == arbitro);
+        valorDoNavioRecuperado = _valorDoNavioRecuperado;
+        valorDaMercadoriaRecuperada = _valorDaMercadoriaRecuperada;
+    }
+    
+    function solicitarArbitragemDoContainer(uint identidadeDoContainer) public {
+        require (msg.sender == container.walletProprietario);
+        require(container.walletProprietario = false);
+        disputeObject = container.valorDaMercadoria;
+        walletProprietario = msg.sender;
+    }
+        
+    function arbitragemDoContainer( uint valorDaMercadoriaRecebido; uint honorariosDeArbitragem) public {
+        require (msg.sender == arbitro);
+    }
+    
+}

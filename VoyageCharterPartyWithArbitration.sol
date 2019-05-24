@@ -4,8 +4,8 @@ contract VoyageCharterPartyWithArbitration {
     
     address payable afretador;
     address payable arbitro;
-    uint public dataDePartidaPrevista;
-    uint public dataDeChegadaPrevista;
+    uint public InicioDoPeriodo;
+    uint public TerminoDoPeriodo;
     uint public dataDePartida;
     uint public dataDeChegada;
     uint public valorDoFrete;
@@ -32,8 +32,8 @@ contract VoyageCharterPartyWithArbitration {
     }
     
     constructor(
-        uint _dataDePartidaPrevista,
-        uint _dataDeChegadaPrevista,
+        uint _inicioDoPeriodo,
+        uint _terminoDoPeriodo,
         uint _totalDeContainers,
         uint _valorDoFrete,
         uint _multaDiariaPorAtraso0a100doValorDoFrete,
@@ -42,8 +42,8 @@ contract VoyageCharterPartyWithArbitration {
         ) public
     {
         afretador = msg.sender;
-        dataDePartidaPrevista = _dataDePartidaPrevista;
-        dataDeChegadaPrevista = _dataDeChegadaPrevista;
+        inicioDoPeriodo = _inicioDoPeriodo;
+        terminoDoPeriodo = _terminoDoPeriodo;
         totalDeContainers = _totalDeContainers;
         valorDoFrete = _valorDoFrete;
         multaDiariaPorAtraso = _multaDiariaPorAtraso0a100doValorDoFrete;
@@ -60,7 +60,7 @@ contract VoyageCharterPartyWithArbitration {
     function registrarFrete(uint _quantidadeDeContainers) inState(State.Aberto) public payable {
         require(numeroDeContainers < totalDeContainers, "Embarcacao Completa.");
         require(msg.value == valorDoFrete*_quantidadeDeContainers, "Valor incorreto.");
-        require(now < dataDePartidaPrevista, "Embarcacao Fechada.");
+        require(now < dataDePartida, "Embarcacao Fechada.");
         numeroDeContainers += _quantidadeDeContainers;
         valorTotalDosFretes += msg.value;
         listaDeFretes.push(frete(msg.sender, _quantidadeDeContainers, valorDoFrete*_quantidadeDeContainers, true));
@@ -116,20 +116,20 @@ contract VoyageCharterPartyWithArbitration {
     
     function pagarViagemNoPeriodo() inState(State.Desembarcado) public payable {
         require(msg.sender == afretador, "Somente o armador pode fazer isso.");
-        require(dataDeChegada <= dataDeChegadaPrevista, "Desembarque fora do Periodo.");
+        require(dataDeChegada <= terminoDoPeriodo, "Desembarque fora do Periodo.");
         afretador.transfer(address(this).balance);
     }
     
     function calcularDaMultaPorAtraso() public returns (uint256) {
-        diasDeAtraso = dataDeChegadaPrevista-dataDeChegada/86400;
+        diasDeAtraso = terminoDoPeriodo-dataDeChegada/86400;
         return valorTotalDosFretes*multaDiariaPorAtraso*diasDeAtraso;
     }
     
     function pagarViagemForaDoPeriodo() public payable {
         require(msg.sender == afretador, "Somente o despachante pode fazer isso.");
-        require(dataDeChegada > dataDeChegadaPrevista, "Desembarque fora do Periodo.");
+        require(dataDeChegada > terminoDoPeriodo, "Desembarque fora do Periodo.");
         require(msg.value == valorTotalDosFretes*multaDiariaPorAtraso*diasDeAtraso);
-        diasDeAtraso = dataDeChegadaPrevista-dataDeChegada-dataDeChegada/86400;
+        diasDeAtraso = terminoDoPeriodo-dataDeChegada-dataDeChegada/86400;
         calculoDaMultaPorAtraso = multaDiariaPorAtraso*diasDeAtraso*numeroDeContainers/100;
         for (uint i=0; i<listaDeFretes.length; i++) {
             frete memory freteAtrasado = listaDeFretes[i];

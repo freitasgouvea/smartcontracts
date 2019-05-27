@@ -6,6 +6,7 @@ contract BuyACar {
     address car;
     uint256 public totalValue;
     uint256 public totalValuePayed;
+    uint256 public totalValueOpen;
     uint256 interestRate;
     uint256 public numberOfBills;
     uint256 public numberOfBillsPayed;
@@ -33,6 +34,16 @@ contract BuyACar {
     event vehicleBlocked();
     event vehicleUnblocked();
     
+    modifier OnlySeller() {
+    require(msg.sender == seller);
+    _; 
+    }
+    
+    modifier OnlyBuyer() {
+    require(msg.sender == buyer);
+    _; 
+    }
+    
     constructor (
         address payable _buyerWallet,
         address _carWallet,
@@ -47,7 +58,7 @@ contract BuyACar {
         totalValue = _totalValue;
         interestRate = _interestRate;
         numberOfBills = _numberOfBills;
-        numberOfBillsOpen = numberOfBills-numberOfBillsPayed;
+        billValue = _totalValue/_numberOfBills;
         dateOfNextBill = _dateOfFirstBill;
         notificatedForLate = false;
         carBlocked = false;
@@ -55,25 +66,27 @@ contract BuyACar {
     }
     
     
-    function payACar () public payable {
-        require (dateOfNextBill<= now);
+    function payACar () OnlyBuyer public payable {
+        require (now <= dateOfNextBill);
         require (msg.value == billValue);
-        require (msg.sender == buyer);
         dateOfNextBill = dateOfNextBill + 2629743;
         totalValuePayed += billValue;
+        totalValueOpen = totalValue- totalValuePayed;
         numberOfBillsPayed ++;
+        numberOfBillsOpen = numberOfBills-numberOfBillsPayed;
         listOfBills.push(bill(dateOfNextBill, billValue, now, msg.value, true));
         seller.transfer(address(this).balance);
         emit Payment();
     }
     
-    function payACarWithLate () public payable {
-        require (dateOfNextBill>= now);
+    function payACarWithLate () OnlyBuyer public payable {
+        require (now >= dateOfNextBill);
         require (msg.value == billValue+interestRate);
-        require (msg.sender == buyer);
-        dateOfLastBill = now;
         dateOfNextBill = dateOfNextBill + 2629743;
         totalValuePayed += billValue;
+        totalValueOpen = totalValue- totalValuePayed;
+        numberOfBillsPayed ++;
+        numberOfBillsOpen = numberOfBills-numberOfBillsPayed;
         listOfBills.push(bill(dateOfNextBill, billValue, now, msg.value, true));
         seller.transfer(address(this).balance);
         emit Payment();
@@ -90,24 +103,21 @@ contract BuyACar {
         vehicleOff = true;
     }
     
-    function notificationForLate() public {
-        require (msg.sender == seller);
-        require (now >= dateOfNextBill+604800);
+    function notificationForLate() OnlySeller public {
+        require (now >= dateOfNextBill);
         dateOfLastNotification = now;
         notificatedForLate = true;
         emit Notification();
     }
     
-    function blockVehicle() public {
-        require (msg.sender == seller);
+    function blockVehicle() OnlySeller public {
         require (now >= dateOfLastNotification+604800);
         require (vehicleOff == true);
         carBlocked = true;
         emit vehicleBlocked();
     }
     
-    function unblockVehicle() public {
-        require (msg.sender == seller);
+    function unblockVehicle() OnlySeller public {
         require (now >= dateOfNextBill);
         require (carBlocked == true);
         dateOfLastNotification = 0;

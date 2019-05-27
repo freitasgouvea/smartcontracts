@@ -6,11 +6,9 @@ contract BuyACar {
     address car;
     uint256 public totalValue;
     uint256 public totalValuePayed;
-    uint256 public totalValueOpen;
     uint256 interestRate;
     uint256 public numberOfBills;
     uint256 public numberOfBillsPayed;
-    uint256 public numberOfBillsOpen;
     uint256 public billValue;
     uint256 dateOfLastBill;
     uint256 public dateOfNextBill;
@@ -60,8 +58,6 @@ contract BuyACar {
         numberOfBills = _numberOfBills;
         billValue = _totalValue/_numberOfBills;
         dateOfNextBill = _dateOfFirstBill;
-        totalValueOpen = totalValue - totalValuePayed;
-        numberOfBillsOpen = numberOfBills-numberOfBillsPayed;
         notificatedForLate = false;
         carBlocked = false;
         vehicleOff = true;
@@ -75,7 +71,7 @@ contract BuyACar {
         totalValuePayed += billValue;
         numberOfBillsPayed ++;
         listOfBills.push(bill(dateOfNextBill, billValue, now, msg.value, true));
-        seller.transfer(address(this).balance);
+        seller.transfer(msg.value);
         emit Payment();
     }
     
@@ -86,7 +82,7 @@ contract BuyACar {
         totalValuePayed += billValue;
         numberOfBillsPayed ++;
         listOfBills.push(bill(dateOfNextBill, billValue, now, msg.value, true));
-        seller.transfer(address(this).balance);
+        seller.transfer(msg.value);
         emit Payment();
     }
     

@@ -51,6 +51,7 @@ contract BuyACar {
         uint256 _dateOfFirstBill
         ) public
     {
+        seller = msg.sender;
         buyer = _buyerWallet;
         car = _carWallet;
         totalValue = _totalValue;

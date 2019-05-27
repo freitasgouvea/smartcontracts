@@ -109,14 +109,14 @@ contract BuyACar {
     }
     
     function blockVehicle() OnlySeller public {
-        require (now >= dateOfLastNotification+604800);
+        require (now >= dateOfNextBill);
+        require (now >= dateOfLastNotification);
         require (vehicleOff == true);
         carBlocked = true;
         emit vehicleBlocked();
     }
     
     function unblockVehicle() OnlySeller public {
-        require (now >= dateOfNextBill);
         require (carBlocked == true);
         dateOfLastNotification = 0;
         notificatedForLate = false;
@@ -125,3 +125,4 @@ contract BuyACar {
     }
     
 }
+    

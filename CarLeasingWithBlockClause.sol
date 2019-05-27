@@ -60,6 +60,8 @@ contract BuyACar {
         numberOfBills = _numberOfBills;
         billValue = _totalValue/_numberOfBills;
         dateOfNextBill = _dateOfFirstBill;
+        totalValueOpen = totalValue - totalValuePayed;
+        numberOfBillsOpen = numberOfBills-numberOfBillsPayed;
         notificatedForLate = false;
         carBlocked = false;
         vehicleOff = true;
@@ -71,9 +73,7 @@ contract BuyACar {
         require (msg.value == billValue);
         dateOfNextBill = dateOfNextBill + 2629743;
         totalValuePayed += billValue;
-        totalValueOpen = totalValue- totalValuePayed;
         numberOfBillsPayed ++;
-        numberOfBillsOpen = numberOfBills-numberOfBillsPayed;
         listOfBills.push(bill(dateOfNextBill, billValue, now, msg.value, true));
         seller.transfer(address(this).balance);
         emit Payment();
@@ -84,9 +84,7 @@ contract BuyACar {
         require (msg.value == billValue+interestRate);
         dateOfNextBill = dateOfNextBill + 2629743;
         totalValuePayed += billValue;
-        totalValueOpen = totalValue- totalValuePayed;
         numberOfBillsPayed ++;
-        numberOfBillsOpen = numberOfBills-numberOfBillsPayed;
         listOfBills.push(bill(dateOfNextBill, billValue, now, msg.value, true));
         seller.transfer(address(this).balance);
         emit Payment();
@@ -127,4 +125,3 @@ contract BuyACar {
     }
     
 }
-    

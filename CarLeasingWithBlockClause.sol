@@ -31,6 +31,8 @@ contract BuyACar {
     event Notification();
     event vehicleBlocked();
     event vehicleUnblocked();
+    event transferDomain();
+    event transferContract();
     
     modifier OnlySeller() {
     require(msg.sender == seller);
@@ -121,5 +123,15 @@ contract BuyACar {
         emit vehicleUnblocked();
     }
     
+    function transferDomainToBuyer() OnlySeller public {
+        require (totalValue == totalValue);
+        seller = buyer;
+        emit transferDomain();
+    }
+    
+    function transferContractToThirdParty(address payable _newSeller) OnlySeller public {
+        seller = _newSeller;
+        emit transferContract();
+    }
 }
     

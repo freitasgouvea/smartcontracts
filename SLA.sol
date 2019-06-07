@@ -4,67 +4,77 @@ contract SLA {
     address payable provider;
     address payable contractor;
     uint public dateOfStart;
-    uint dateOfFirstBill;
-    uint dateOfNextBill;
-    uint public deadline;
-    uint public totalValue;
-    uint numberOfBills;
-    uint interestRate;
-    uint fineForDelay;
-    uint public daysOfDelay;
-    uint public valuePayed;
-    //uint public progress;
-    //uint projectKpi;
+    uint256 public totalValue;
+    uint256 public totalValuePayed;
+    uint256 interestRate;
+    uint256 public numberOfBills;
+    uint256 public numberOfBillsPayed;
+    uint256 public billValue;
+    uint256 dateOfLastBill;
+    uint256 public dateOfNextBill;
+    bool public serviceConcluded;
     
-    bill [] public listOfbills;
+       bill [] public listOfBills;
     
     struct bill {
-        uint valueOfBill;
-        uint dueDate;
-        uint daysOfLate;
-        uint payDay;
-        uint total;
-        bool billPayed;
+        uint256 dueDate;
+        uint256 valueOfBill;
+        uint256 dateOfBill;
+        uint256 amountBilled;
+        bool payed;
     }
     
-    constructor ( 
-        address payable _providerWallet,
+
+    event Payment();
+    
+    modifier OnlySeller() {
+    require(msg.sender == provider);
+    _; 
+    }
+    
+    modifier OnlyBuyer() {
+    require(msg.sender == contractor);
+    _; 
+    }
+    
+    constructor (
         address payable _contractorWallet,
-        uint _dateOfStart,
-        uint _deadline,
-        uint _totalValue,
-        uint _fineForDelay,
-        uint _numberOfBills,
-        uint _dateOfFirstBill
-        ) public 
+        uint256 _totalValue,
+        uint256 _interestRate,
+        uint256 _numberOfBills,
+        uint256 _dateOfFirstBill
+        ) public
     {
-        provider = _providerWallet;
+        provider = msg.sender;
         contractor = _contractorWallet;
-        dateOfStart = _dateOfStart;
-        deadline = _deadline;
         totalValue = _totalValue;
-        fineForDelay = _fineForDelay*daysOfDelay;
+        interestRate = _interestRate;
         numberOfBills = _numberOfBills;
-        dateOfFirstBill = _dateOfFirstBill;
-        
+        billValue = _totalValue/_numberOfBills;
+        dateOfNextBill = _dateOfFirstBill;
+        serviceConcluded = false;
     }
     
-    function generateBills() public {
-        require (msg.sender == provider);
-        listOfbills.length = numberOfBills;
-        //listOfbills.push(bill(totalValue/numberOfBills, dateOfFirstBill, 0, 0, 0, false ));
-        for (uint i=0; i <= listOfbills.length; i++) {
-            //bill memory newBill = bill[i];
-            if (numberOfBills >= listOfbills.length)
-            listOfbills.push(bill(totalValue/numberOfBills, dateOfFirstBill+i*2629743, 0, 0, 0, false ));
-        }
+    function payABill () OnlyBuyer public payable {
+        require (now <= dateOfNextBill);
+        require (msg.value == billValue);
+        dateOfNextBill = dateOfNextBill + 2629743;
+        totalValuePayed += billValue;
+        numberOfBillsPayed ++;
+        listOfBills.push(bill(dateOfNextBill, billValue, now, msg.value, true));
+        provider.transfer(msg.value);
+        emit Payment();
     }
     
-    //function payBill(int _billNumber) public payable {
-        //require (msg.sender == contractor);
-        //require (msg.value == totalValue/numberOfBills+interestRate);
-        //bill memory billPayedNow = bill[_billNumber];
-        //listOfbills.push(bill(totalValue/numberOfBills, , now-bill.dueDate, now, false ));
-        //provider.transfer(address(this).balance);
-    //}
+    function payWithLate () OnlyBuyer public payable {
+        require (now > dateOfNextBill);
+        require (msg.value == billValue+((now-dateOfNextBill)*interestRate/2629743));
+        dateOfNextBill = dateOfNextBill + 2629743;
+        totalValuePayed += billValue;
+        numberOfBillsPayed ++;
+        listOfBills.push(bill(dateOfNextBill, billValue, now, msg.value, true));
+        provider.transfer(msg.value);
+        emit Payment();
+    }
+    
 }

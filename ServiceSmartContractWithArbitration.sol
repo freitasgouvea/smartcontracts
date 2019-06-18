@@ -69,13 +69,13 @@ contract ServiceSmartContractWithArbitration {
     
     function solveADispute(uint256 disputeID, bool result) public {
         require (msg.sender == arbitrator);
-        if (result = true) {
+        if (result == true) {
             listOfSells[listOfDisputes[disputeID].serviceID].serviceArbitraded = true;
             listOfDisputes[disputeID].disputeProcessed = true;
             listOfDisputes[disputeID].resultOfDispute = true;
             //contractor.transfer(listOfDisputes[disputeID].valueOfADispute);
         } 
-        if (result = false) {
+        if (result == false) {
             listOfSells[listOfDisputes[disputeID].serviceID].serviceArbitraded = true;
             listOfSells[listOfDisputes[disputeID].serviceID].serviceConcluded = true;
             listOfDisputes[disputeID].disputeProcessed = true;

@@ -17,8 +17,9 @@ contract ServiceSmartContractWithArbitration {
         uint256 dateOfPayment;
         bool servicePayed;
         bool serviceDelivered;
-        bool serviceAccepted;
         bool serviceDisputed;
+        bool serviceArbitraded;
+        bool serviceConcluded;
     }
     
     struct dispute {
@@ -36,7 +37,7 @@ contract ServiceSmartContractWithArbitration {
     
     function registrerService(address _contractor, uint256 _dueDate, uint256 _valueOfBill) public {
         require (msg.sender == provider);
-        listOfSells.push(service(_contractor, _dueDate, _valueOfBill, 0, false, false, false, false));
+        listOfSells.push(service(_contractor, _dueDate, _valueOfBill, 0, false, false, false, false, false));
     }
     
     function payService(uint256 serviceId) public payable {
@@ -55,7 +56,7 @@ contract ServiceSmartContractWithArbitration {
     
     function acceptADelivery(uint256 serviceId) public payable {
         require (msg.sender == listOfSells[serviceId].contractor);
-        listOfSells[serviceId].serviceAccepted = true;
+        listOfSells[serviceId].serviceConcluded = true;
         disponibleValue += listOfSells[serviceId].valueOfBill;
     }
     
@@ -68,16 +69,34 @@ contract ServiceSmartContractWithArbitration {
     
     function solveADispute(uint256 disputeID, bool result) public {
         require (msg.sender == arbitrator);
-        //////
+        if (result = true) {
+            listOfSells[listOfDisputes[disputeID].serviceID].serviceArbitraded = true;
+            listOfDisputes[disputeID].disputeProcessed = true;
+            listOfDisputes[disputeID].resultOfDispute = true;
+            //contractor.transfer(listOfDisputes[disputeID].valueOfADispute);
+        } 
+        if (result = false) {
+            listOfSells[listOfDisputes[disputeID].serviceID].serviceArbitraded = true;
+            listOfSells[listOfDisputes[disputeID].serviceID].serviceConcluded = true;
+            listOfDisputes[disputeID].disputeProcessed = true;
+            listOfDisputes[disputeID].resultOfDispute = false;
+            disponibleValue += listOfSells[listOfDisputes[disputeID].serviceID].valueOfBill;
+        }
     }
     
-    function showBill(uint256 serviceId) public view returns (address, uint256, uint256, uint256, bool, bool, bool) {
-        return (listOfSells[serviceId].contractor, listOfSells[serviceId].dueDate, listOfSells[serviceId].valueOfBill, listOfSells[serviceId].dateOfPayment, listOfSells[serviceId].servicePayed, listOfSells[serviceId].serviceDelivered, listOfSells[serviceId].serviceAccepted );
+    function showBill(uint256 serviceId) public view returns (address, uint256, uint256, uint256, bool) {
+        return (listOfSells[serviceId].contractor, listOfSells[serviceId].dueDate, listOfSells[serviceId].valueOfBill, listOfSells[serviceId].dateOfPayment, listOfSells[serviceId].servicePayed);
     }
     
-    ///function showDispute (uint256 serviceId)
+    function showServiceStatus(uint256 serviceId) public view returns (bool, bool, bool, bool,bool) {
+        return (listOfSells[serviceId].servicePayed, listOfSells[serviceId].serviceDelivered, listOfSells[serviceId].serviceDisputed, listOfSells[serviceId].serviceArbitraded, listOfSells[serviceId].serviceConcluded);
+    }
     
-    function showBalance() public view returns(uint256, uint256){
+    function showDispute(uint256 disputeID) public view returns (uint256, address, uint256, bool, bool) {
+        return (listOfDisputes[disputeID].serviceID, listOfDisputes[disputeID].contractor, listOfDisputes[disputeID].valueOfADispute, listOfDisputes[disputeID].disputeProcessed, listOfDisputes[disputeID].resultOfDispute);
+    }
+    
+    function showBalance() public view returns(uint256, uint256) {
         require (msg.sender == provider);
         return (value,disponibleValue);
     }

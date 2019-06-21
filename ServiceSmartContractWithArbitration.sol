@@ -3,19 +3,19 @@ pragma solidity 0.5.1.;
 contract ServiceSmartContractWithArbitration {
     address payable provider;
     address arbitrator;
-    uint256 value;
+    uint256 balance;
     uint256 valueToTransfer;
-    uint256 disponibleValue;
-    
+
     service [] listOfSells;
     dispute [] listOfDisputes;
     
     struct service {
-        address contractor;
+        address payable contractor;
         uint256 dueDate;
-        uint256 valueOfBill;
+        uint256 billValue;
         uint256 dateOfPayment;
         bool servicePayed;
+        bool serviceCanceled;
         bool serviceDelivered;
         bool serviceDisputed;
         bool serviceArbitraded;
@@ -23,8 +23,8 @@ contract ServiceSmartContractWithArbitration {
     }
     
     struct dispute {
-        uint256 serviceID;
-        address contractor;
+        uint256 serviceId;
+        address payable contractor;
         uint256 valueOfADispute;
         bool disputeProcessed;
         bool resultOfDispute;
@@ -35,78 +35,86 @@ contract ServiceSmartContractWithArbitration {
         arbitrator = _arbitratorWallet;
     }
     
-    function registrerService(address _contractor, uint256 _dueDate, uint256 _valueOfBill) public {
+    function registrerService (address payable _contractor, uint256 _dueDate, uint256 _billValue) public {
         require (msg.sender == provider);
-        listOfSells.push(service(_contractor, _dueDate, _valueOfBill, 0, false, false, false, false, false));
+        listOfSells.push(service(_contractor, _dueDate, _billValue, 0, false, false, false, false, false, false));
     }
     
-    function payService(uint256 serviceId) public payable {
-        require (listOfSells[serviceId].valueOfBill == msg.value);
+    function payService (uint256 serviceId) public payable {
+        require (listOfSells[serviceId].billValue == msg.value);
         require (listOfSells[serviceId].servicePayed == false);
+        require (listOfSells[serviceId].serviceCanceled == false);
         listOfSells[serviceId].dateOfPayment = now;
         listOfSells[serviceId].servicePayed = true;
-        value += msg.value;
+        balance += msg.value;
     }
     
-    function deliveryAService(uint256 serviceId) public payable {
+    function cancelService (uint256 serviceId) public payable {
+        require (msg.sender == provider);
+        listOfSells[serviceId].serviceCanceled = true;
+        listOfSells[serviceId].contractor.transfer(listOfSells[serviceId].billValue);
+        balance -= listOfSells[serviceId].billValue;
+    }
+    
+    function deliveryAService(uint256 serviceId) public {
         require (msg.sender == provider);
         require (true == listOfSells[serviceId].servicePayed);
         listOfSells[serviceId].serviceDelivered = true;
     }
     
-    function acceptADelivery(uint256 serviceId) public payable {
+    function acceptService(uint256 serviceId) public payable {
         require (msg.sender == listOfSells[serviceId].contractor);
+        provider.transfer(listOfSells[serviceId].billValue);
         listOfSells[serviceId].serviceConcluded = true;
-        disponibleValue += listOfSells[serviceId].valueOfBill;
+        balance -= listOfSells[serviceId].billValue;
     }
     
-    function contestAService(uint256 serviceId) public {
+    function rejectService(uint256 serviceId) public {
         require (msg.sender == listOfSells[serviceId].contractor);
         require (true == listOfSells[serviceId].serviceDelivered);
-        listOfDisputes.push(dispute(serviceId, listOfSells[serviceId].contractor, listOfSells[serviceId].valueOfBill, false, false));
+        listOfDisputes.push(dispute(serviceId, listOfSells[serviceId].contractor, listOfSells[serviceId].billValue, false, false));
         listOfSells[serviceId].serviceDisputed = true;
     }
     
-    function solveADispute(uint256 disputeID, bool result) public {
+    function disputeToContractor(uint256 disputeId) public payable {
         require (msg.sender == arbitrator);
-        if (result == true) {
-            listOfSells[listOfDisputes[disputeID].serviceID].serviceArbitraded = true;
-            listOfDisputes[disputeID].disputeProcessed = true;
-            listOfDisputes[disputeID].resultOfDispute = true;
-            //contractor.transfer(listOfDisputes[disputeID].valueOfADispute);
-        } 
-        if (result == false) {
-            listOfSells[listOfDisputes[disputeID].serviceID].serviceArbitraded = true;
-            listOfSells[listOfDisputes[disputeID].serviceID].serviceConcluded = true;
-            listOfDisputes[disputeID].disputeProcessed = true;
-            listOfDisputes[disputeID].resultOfDispute = false;
-            disponibleValue += listOfSells[listOfDisputes[disputeID].serviceID].valueOfBill;
-        }
+        listOfDisputes[disputeId].contractor.transfer(listOfDisputes[disputeId].valueOfADispute);
+        listOfSells[listOfDisputes[disputeId].serviceId].serviceArbitraded = true;
+        listOfDisputes[disputeId].disputeProcessed = true;
+        listOfDisputes[disputeId].resultOfDispute = true;
+        balance -= listOfDisputes[disputeId].valueOfADispute;
     }
     
-    function showBill(uint256 serviceId) public view returns (address, uint256, uint256, uint256, bool) {
-        return (listOfSells[serviceId].contractor, listOfSells[serviceId].dueDate, listOfSells[serviceId].valueOfBill, listOfSells[serviceId].dateOfPayment, listOfSells[serviceId].servicePayed);
+    function disputeToProvider(uint256 disputeId) public payable {
+        require (msg.sender == arbitrator);
+        listOfSells[listOfDisputes[disputeId].serviceId].serviceArbitraded = true;
+        listOfDisputes[disputeId].disputeProcessed = true;
+        listOfDisputes[disputeId].resultOfDispute = false;
+        provider.transfer(listOfDisputes[disputeId].valueOfADispute);
+        balance -= listOfDisputes[disputeId].valueOfADispute;
     }
     
-    function showServiceStatus(uint256 serviceId) public view returns (bool, bool, bool, bool,bool) {
-        return (listOfSells[serviceId].servicePayed, listOfSells[serviceId].serviceDelivered, listOfSells[serviceId].serviceDisputed, listOfSells[serviceId].serviceArbitraded, listOfSells[serviceId].serviceConcluded);
+    function showBill(uint256 serviceId) public view returns (address, uint256, uint256, uint256, bool, bool) {
+        return (listOfSells[serviceId].contractor, listOfSells[serviceId].dueDate, listOfSells[serviceId].billValue, listOfSells[serviceId].dateOfPayment, listOfSells[serviceId].servicePayed, listOfSells[serviceId].serviceCanceled);
     }
     
-    function showDispute(uint256 disputeID) public view returns (uint256, address, uint256, bool, bool) {
-        return (listOfDisputes[disputeID].serviceID, listOfDisputes[disputeID].contractor, listOfDisputes[disputeID].valueOfADispute, listOfDisputes[disputeID].disputeProcessed, listOfDisputes[disputeID].resultOfDispute);
+    function showServiceStatus(uint256 serviceId) public view returns (bool, bool, bool, bool, bool,bool) {
+        return (listOfSells[serviceId].servicePayed, listOfSells[serviceId].serviceCanceled, listOfSells[serviceId].serviceDelivered, listOfSells[serviceId].serviceDisputed, listOfSells[serviceId].serviceArbitraded, listOfSells[serviceId].serviceConcluded);
     }
     
-    function showBalance() public view returns(uint256, uint256) {
+    function showDispute(uint256 disputeId) public view returns (uint256, address, uint256, bool, bool) {
+        return (listOfDisputes[disputeId].serviceId, listOfDisputes[disputeId].contractor, listOfDisputes[disputeId].valueOfADispute, listOfDisputes[disputeId].disputeProcessed, listOfDisputes[disputeId].resultOfDispute);
+    }
+    
+    function showBalance() public view returns (uint256) {
         require (msg.sender == provider);
-        return (value,disponibleValue);
+        return (balance);
     }
     
     function drawSells(uint256 _value) public payable {
         require (msg.sender == provider);
-        require (_value <= disponibleValue);
         valueToTransfer = _value;
         provider.transfer(valueToTransfer);
-        value -= _value;
-        disponibleValue -=_value;
+        balance -= _value;
     }
 }

@@ -1,8 +1,9 @@
 pragma solidity 0.5.1.;
 
-contract alienacaoSocietaria {
-    address payable advogado;
+contract SociedadeEmpresarial {
+    address payable owner;
     string nomeDaSociedade;
+    uint256 cnpj;
     uint256 capitalSocial;
     uint256 valorDaAcao;
     uint256 numeroDeAcoes;
@@ -26,16 +27,25 @@ contract alienacaoSocietaria {
         uint256 dataDaOperacao;
     }
     
-    constructor (string memory _nomeDaSociedade, uint256 _capitalSocial, uint256 _numeroDeAcoes, uint256 _valorDaAcao) public {
-        advogado =  msg.sender;
+    constructor (string memory _nomeDaSociedade, uint256 _cnpj) public {
+        owner =  msg.sender;
         nomeDaSociedade = _nomeDaSociedade;
+        cnpj = _cnpj;
+    }
+    
+    function registrarContratoSocial( uint256 _capitalSocial, uint256 _numeroDeAcoes, uint256 _valorDaAcao) public {
+        owner =  msg.sender;
         capitalSocial = _capitalSocial;
         numeroDeAcoes = _numeroDeAcoes;
         valorDaAcao = _valorDaAcao;
     }
     
+    //function alterarContratoSocial()
+    
+    //function alterarCapitalSocial()
+    
     function registrarAcionista(string memory _nome, uint256 _cpf, address payable _wallet, uint256 _numeroDeAcoes) public {
-        require (msg.sender == advogado);
+        require (msg.sender == owner);
         listaDeAcionistas.push(acionista(_nome, _cpf, _wallet, _numeroDeAcoes));
     }
     
@@ -54,4 +64,6 @@ contract alienacaoSocietaria {
         listaDeAlienacoes[_idAlienacao].vendedorWallet.transfer(msg.value);
         listaDeAlienacoes[_idAlienacao].dataDaOperacao = now;
     }
+    
+    // views
 }

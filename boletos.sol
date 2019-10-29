@@ -1,4 +1,4 @@
-pragma solidity 0.5.1.;
+pragma solidity 0.5.12.;
 
 contract Boletos {
 
@@ -14,13 +14,20 @@ contract Boletos {
         uint256 jurosDeMora;
         uint256 dataDoPagamento;
         uint256 valorPago;
+        bool ativo;
         bool pagamento;
     }
 
+    event BoletoCriado();
     event Pagamento();
+
+    modifier OnlyBankr() {
+    require(msg.sender == banco);
+    _; 
+    }
     
     modifier OnlyOwner() {
-    require(msg.sender == provider);
+    require(msg.sender == boleto.owner);
     _; 
     }
     
@@ -31,15 +38,26 @@ contract Boletos {
       banco = _banco;
     }
     
-    function criarBoleto (
-        address payable _owner,
+    function CriarBoleto (
         uint256 _valorDoBoleto,
         uint256 _dataDeVencimento,
         uint256 _multaPorAtraso,
         uint256 _jurosDeMora
-    )
+    ) {
+        novoBoleto memory nb = novoBoleto(msg.sender, 0, _valorDoBoleto, _dataDeVencimento, _multaPorAtraso, _jurosDeMora, 0, 0, true, false);
+        boletos[] = nb;
+        emit BoletoCriado (nb.msg.sender, nb._valorDoBoleto, nb._dataDeVencimento);
+    }
     
+    function VerBoleto ( 
+        uint256 boletoID
+        )
+        
+        )
     
+    function PagarBoleto (
+        
+        )
     
     function payABill () OnlyBuyer public payable {
         require (now <= dateOfNextBill);

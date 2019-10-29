@@ -1,6 +1,6 @@
 pragma solidity 0.5.1.;
 
-contract SLA {
+contract Parcelamento {
     address payable provider;
     address payable contractor;
     uint public dateOfStart;

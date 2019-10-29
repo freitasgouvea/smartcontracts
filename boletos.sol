@@ -2,10 +2,10 @@ pragma solidity 0.5.12.;
 
 contract Boletos {
 
-    banco address;
-    boletos [] public listaDeBoletos
+    address banco;
+    Boleto [] public listaDeBoletos;
     
-    struct boleto {
+    struct Boleto {
         address payable owner;
         address payable payer;
         uint256 valorDoBoleto;
@@ -32,7 +32,7 @@ contract Boletos {
     }
     
     constructor (
-        address _banco,
+        address _banco
         ) public
     {
       banco = _banco;
@@ -45,8 +45,8 @@ contract Boletos {
         uint256 _jurosDeMora
     ) {
         novoBoleto memory nb = novoBoleto(msg.sender, 0, _valorDoBoleto, _dataDeVencimento, _multaPorAtraso, _jurosDeMora, 0, 0, true, false);
-        boletos[] = nb;
-        emit BoletoCriado (nb.msg.sender, nb._valorDoBoleto, nb._dataDeVencimento);
+        boletos[boletoID] = nb;
+        emit BoletoCriado (nb.boletoID, nb.msg.sender, nb._valorDoBoleto, nb._dataDeVencimento);
     }
     
     function VerBoleto ( 

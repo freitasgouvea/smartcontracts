@@ -45,19 +45,23 @@ contract Boletos {
         uint256 _jurosDeMora
     ) {
         novoBoleto memory nb = novoBoleto(msg.sender, 0, _valorDoBoleto, _dataDeVencimento, _multaPorAtraso, _jurosDeMora, 0, 0, true, false);
-        boletos[boletoID] = nb;
+        listaDeBoletos[boletoID] = nb;
         emit BoletoCriado (nb.boletoID, nb.msg.sender, nb._valorDoBoleto, nb._dataDeVencimento);
     }
     
-    function VerBoleto ( 
-        uint256 boletoID
-        )
+    function VerBoleto (uint256 boletoID) public view returns(address, uint256, uint256,uint256) {
+        if (now<listaDeBoletos[boletoID].dataDeVencimento) {
+        valorAtualizado memory va; 
+        = listaDeBoletos[boletoID].valorDoBoleto
+        }
+        return (listaDeBoletos[boletoID].owner, listaDeBoletos[boletoID].valorDoBoleto, listaDeBoletos[boletoID].dataDeVencimento, va, 
+    }
         
-        )
+        
     
-    function PagarBoleto (
+    //function PagarBoleto (
         
-        )
+    //    )
     
     function payABill () OnlyBuyer public payable {
         require (now <= dateOfNextBill);

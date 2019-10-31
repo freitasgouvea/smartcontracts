@@ -55,17 +55,21 @@ contract Boletos {
         return (true);
     }
     
-    function verBoleto (bytes32 hashBoleto) public view returns(address, uint256, uint256,uint256) {
+    function verBoleto (bytes32 hashBoleto) public view returns(uint256, uint256, uint256, uint256, uint256) {
         if (now<listaDeBoletos[hashBoleto].vencimento) {
             uint256 valorAtualizado;  
             valorAtualizado= listaDeBoletos[hashBoleto].valorDoBoleto;
-            return (listaDeBoletos[hashBoleto].owner, listaDeBoletos[hashBoleto].valorDoBoleto, listaDeBoletos[hashBoleto].vencimento, valorAtualizado);
+            return (listaDeBoletos[hashBoleto].valorDoBoleto, listaDeBoletos[hashBoleto].multaPorAtraso, listaDeBoletos[hashBoleto].jurosDeMora, listaDeBoletos[hashBoleto].vencimento, valorAtualizado);
         }
         else {
             uint256 valorAtualizado; 
             valorAtualizado= listaDeBoletos[hashBoleto].valorDoBoleto+((now-listaDeBoletos[hashBoleto].vencimento)/86400)*listaDeBoletos[hashBoleto].jurosDeMora+listaDeBoletos[hashBoleto].multaPorAtraso;
-            return (listaDeBoletos[hashBoleto].owner, listaDeBoletos[hashBoleto].valorDoBoleto, listaDeBoletos[hashBoleto].vencimento, valorAtualizado);
+            return (listaDeBoletos[hashBoleto].valorDoBoleto, listaDeBoletos[hashBoleto].multaPorAtraso, listaDeBoletos[hashBoleto].jurosDeMora, listaDeBoletos[hashBoleto].vencimento, valorAtualizado);
         }
+    }
+    
+    function detalhesBoleto (bytes32 hashBoleto) public view returns(address, string memory, address, string memory, uint256, uint256, bool){
+        return (listaDeBoletos[hashBoleto].owner, listaDeBoletos[hashBoleto].ownerID, listaDeBoletos[hashBoleto].payer, listaDeBoletos[hashBoleto].payerID, listaDeBoletos[hashBoleto].dataDoPagamento, listaDeBoletos[hashBoleto].valorPago, listaDeBoletos[hashBoleto].pagamento);   
     }
     
         

@@ -55,7 +55,7 @@ contract Boletos {
         return (true);
     }
     
-    function VerBoleto (bytes32 hashBoleto) public view returns(address, uint256, uint256,uint256) {
+    function verBoleto (bytes32 hashBoleto) public view returns(address, uint256, uint256,uint256) {
         if (now<listaDeBoletos[hashBoleto].vencimento) {
             uint256 valorAtualizado;  
             valorAtualizado= listaDeBoletos[hashBoleto].valorDoBoleto;
@@ -69,12 +69,14 @@ contract Boletos {
     }
     
         
-    function pagarBoleto (bytes32 hashBoleto) public payable returns(bool) {
+    function pagarBoleto (bytes32 hashBoleto, string memory _payerID) public payable returns(bool) {
         if (now<listaDeBoletos[hashBoleto].vencimento) {
             uint256 valorAtualizado;  
             valorAtualizado= listaDeBoletos[hashBoleto].valorDoBoleto;
             require (msg.value == valorAtualizado);
             listaDeBoletos[hashBoleto].owner.transfer(msg.value);
+            listaDeBoletos[hashBoleto].payer = msg.sender;
+            listaDeBoletos[hashBoleto].payerID = _payerID;
             listaDeBoletos[hashBoleto].dataDoPagamento = now;
             listaDeBoletos[hashBoleto].valorPago = msg.value;
             listaDeBoletos[hashBoleto].pagamento = true;
@@ -85,6 +87,8 @@ contract Boletos {
             valorAtualizado= listaDeBoletos[hashBoleto].valorDoBoleto+((now-listaDeBoletos[hashBoleto].vencimento)/86400)*listaDeBoletos[hashBoleto].jurosDeMora+listaDeBoletos[hashBoleto].multaPorAtraso;
             require (msg.value == valorAtualizado);
             listaDeBoletos[hashBoleto].owner.transfer(msg.value);
+            listaDeBoletos[hashBoleto].payer = msg.sender;
+            listaDeBoletos[hashBoleto].payerID = _payerID;
             listaDeBoletos[hashBoleto].dataDoPagamento = now;
             listaDeBoletos[hashBoleto].valorPago = msg.value;
             listaDeBoletos[hashBoleto].pagamento = true;

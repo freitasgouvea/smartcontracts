@@ -3,7 +3,7 @@ pragma solidity 0.5.11;
 contract locacaoComercial {
 
     /* Variaveis:
-    Partes: Locadora e Locatária (ok)
+    Partes: Locadora e Locatária
     Objeto: locação do imóvel objeto de matrícula 1234.
     Destinação da área locada: a área locada se destina exclusivamente à instalação, manutenção, operação e gestão de instituição de ensino e atividades administrativas correlatas.
     Prazo de vigência do Contrato: 180 (cento e oitenta) meses.
@@ -16,23 +16,20 @@ contract locacaoComercial {
     Multa. As Partes estabelecem o pagamento de uma multa de 3 (três) Aluguéis Mensais (R$ 210.000,00).
     */
 
-    string nomeLocadora;
+    address advogada;
     address payable addressLocadora;
-    string nomeLocataria;
     address payable addressLocataria;
     string matriculaImovel;
-    uint256 prazoInicialContrato;
-    uint256 peridodoDeRenovacao;
-    uint256 prazoParaRenovar;
+    uint256 prazoInicialContratoEmMeses;
+    uint256 peridodoDeRenovacaoEmMeses;
+    uint256 prazoParaRenovarEmMeses;
     uint256 valorAluguel;
+    uint256 vencimentoProximaParcela;
+    uint256 jurosDeMoraAoMes;
+    uint256 multaPorAtrasoNoPagamentoEmPorcentagem;
+    
     uint256 indiceDeCorrecaoAnual;
-    uint256 vencimentoPrimeiraParcela;
-    uint256 jurosDeMora;
-    uint256 multaPorAtrasoNoPagamento;
-    uint256 multaContratual = 3*valorAluguel;
-    
-    //estas dois campos devem podem validados por um terceiro ou um oraculo, por exemplo, o advogado:
-    
+    uint256 multaContratual = 3*valorAluguel;    
     bool periodoLetivo;
     bool objetoEducacao;
 
@@ -63,6 +60,47 @@ contract locacaoComercial {
     
     */
     
-    [...]
+    constructor (address payable _addressLocadora, 
+        address payable _addressLocataria,
+        string _matriculaImovel,
+        uint256 _prazoInicialContratoEmMeses,
+        uint256 _peridodoDeRenovacaoEmMeses,
+        uint256 _prazoParaRenovarEmMeses,
+        uint256 _valorAluguel,
+        uint256 _vencimentoPrimeiraParcela,
+        uint256 _jurosDeMoraAoMes,
+        uint256 _multaPorAtrasoNoPagamentoEmPorcentagem
+        ) 
+    public {
+        advogada = msg.sender;
+        addressLocadora = _addressLocadora;
+        addressLocataria = _addressLocataria;
+        matriculaImovel = _matriculaImovel;
+        prazoInicialContratoEmMeses = _prazoInicialContratoEmMeses*2592000;
+        peridodoDeRenovacaoEmMeses = _peridodoDeRenovacaoEmMeses*2592000;
+        prazoParaRenovarEmMeses = _prazoParaRenovarEmMeses*2592000;
+        valorAluguel = _valorAluguel;
+        vencimentoProximaParcela = _vencimentoPrimeiraParcela;
+        jurosDeMoraAoMes = _jurosDeMoraAoMes;
+        multaPorAtrasoNoPagamentoEmPorcentagem = _multaPorAtrasoNoPagamentoEmPorcentagem;
+    }
     
+    // function pagamentoAluguel
+    
+    // function correcaoAnual
+    
+    // function notificacaoParaRenovacaoDoContrato
+    
+    // function renovacaoContrato
+    
+    // function periodoLetivo (oraculo: essa informacao tem que vir de um terceiro, como um advogado por exemplo)
+    
+    // function desvioDoObjetoContratual (oraculo: idem)
+    
+    // function notificacaoParaRescisao
+    
+    // function rescisaoJustificada
+    
+    // function rescisaoInustificada
+       
 }

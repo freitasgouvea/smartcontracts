@@ -46,7 +46,7 @@ contract locacaoComercial {
     Funçoes sugeridas:
     
     1 - Constructor com os parametros a serem declarados para as variaveis acima.
-    2 - Pagamento do alugeul (antes do vencimento ou com atraso, usando um if para antes do vencimento e o else para depois do vencimento, com o require o valor da obrigaçao e transfer para o locatario)
+    2 - Pagamento do alugeul (antes do vencimento ou com atraso, usando um if para antes do vencimento e o else para depois do vencimento, neste caso aplicando os juros de mora e multa contratual com a ajuda do timestamp, com o require o valor da obrigaçao e transfer para o locatario)
     3 - Correcao anual do valor do aluguel (com o ajuste do valor de acordo com o indice)
     4 - Notificacao para renovacao
     5 - Renovação. A LOCADORA garante à LOCATÁRIA o direito de renovar o Prazo Inicial de vigência por mais 60 (sessenta) meses adicionais. Para tanto, sem prejuízo do direito de propor a ação renovatória, a LOCATÁRIA deverá notificar a LOCADORA acerca da intenção em renovar este Contrato até 9 (nove) meses antes do término do Prazo Inicial. Neste caso, a LOCADORA obriga-se a firmar, em até 30 (trinta) dias contatos da notificação acima mencionada, termo aditivo que formalize a prorrogação do Prazo Inicial.

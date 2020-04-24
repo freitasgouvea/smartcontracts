@@ -3,10 +3,10 @@ pragma solidity 0.6.6;
 contract Boletos {
 
     address banco;
-    mapping(bytes32 => Boleto) public listaDeBoletos;
+    mapping(bytes32 => Boleto) private listaDeBoletos;
     
     struct Boleto {
-        string hash;
+        bytes32 hash;
         uint256 dataDaCriacao;
         address payable owner;
         string ownerID;
@@ -73,7 +73,7 @@ contract Boletos {
         }
     }
     
-    function detalhesBoleto (bytes32 hashBoleto) public view returns(string memory, uint256, bool, bool, address, string memory){
+    function detalhesBoleto (bytes32 hashBoleto) public view returns(bytes32, uint256, bool, bool, address, string memory){
         return (listaDeBoletos[hashBoleto].hash, listaDeBoletos[hashBoleto].dataDaCriacao, listaDeBoletos[hashBoleto].ativo, listaDeBoletos[hashBoleto].pagamento, listaDeBoletos[hashBoleto].owner, listaDeBoletos[hashBoleto].ownerID);   
     }
     
@@ -101,7 +101,7 @@ contract Boletos {
         else {
             uint256 valorAtualizado; 
             valorAtualizado= listaDeBoletos[hashBoleto].valorDoBoleto+((now-listaDeBoletos[hashBoleto].vencimento)/86400)*listaDeBoletos[hashBoleto].jurosDeMora+listaDeBoletos[hashBoleto].multaPorAtraso;
-            require (msg.value == valorAtualizado,, "Valor incorreto");
+            require (msg.value == valorAtualizado, "Valor incorreto");
             listaDeBoletos[hashBoleto].owner.transfer(msg.value);
             listaDeBoletos[hashBoleto].payer = msg.sender;
             listaDeBoletos[hashBoleto].payerID = _payerID;

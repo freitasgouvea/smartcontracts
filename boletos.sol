@@ -1,4 +1,4 @@
-pragma solidity 0.5.11.;
+pragma solidity 0.6.6;
 
 contract Boletos {
 
@@ -40,8 +40,8 @@ contract Boletos {
         public
         returns (bytes32)
     {
-        bytes32 hashBoleto = keccak256(abi.encodePacked(_ownerID, now));
-        Boleto memory bn = Boleto(msg.sender, _ownerID, 0x0000000000000000000000000000000000000000, 'cpf/cnpj', _valorDoBoleto, _vencimento, _multaPorAtraso, _jurosDeMoraPorDia, 0, 0, true, false);
+        bytes32 hashBoleto = keccak256(abi.encodePacked(msg.sender, now));
+        Boleto memory bn = Boleto(msg.sender, _ownerID, 0x0000000000000000000000000000000000000000, 'identidade do pagador', _valorDoBoleto, _vencimento, _multaPorAtraso, _jurosDeMoraPorDia, 0, 0, true, false);
         listaDeBoletos[hashBoleto] = bn;
         emit BoletoCriado (hashBoleto, bn.owner, bn.valorDoBoleto, bn.vencimento);
         return hashBoleto;
@@ -50,6 +50,7 @@ contract Boletos {
     function cancelarBoleto (bytes32 hashBoleto) public returns(bool) {
         Boleto storage bc = listaDeBoletos[hashBoleto];
         require(msg.sender == listaDeBoletos[hashBoleto].owner || msg.sender == banco);
+        require (listaDeBoletos[hashBoleto].ativo == true, "Boleto Inativo");
         require(listaDeBoletos[hashBoleto].pagamento == false);
         bc.ativo = false;
         return (true);
@@ -74,10 +75,11 @@ contract Boletos {
     
         
     function pagarBoleto (bytes32 hashBoleto, string memory _payerID) public payable returns(bool) {
+        require (listaDeBoletos[hashBoleto].ativo == true, "Boleto Inativo");
         if (now<listaDeBoletos[hashBoleto].vencimento) {
             uint256 valorAtualizado;  
             valorAtualizado= listaDeBoletos[hashBoleto].valorDoBoleto;
-            require (msg.value == valorAtualizado);
+            require (msg.value == valorAtualizado, "Valor incorreto");
             listaDeBoletos[hashBoleto].owner.transfer(msg.value);
             listaDeBoletos[hashBoleto].payer = msg.sender;
             listaDeBoletos[hashBoleto].payerID = _payerID;

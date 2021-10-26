@@ -9,10 +9,8 @@ contract Boletos {
         bytes32 hash;
         uint256 dataDaCriacao;
         address owner;
-        // address payable walletOwner;
         string ownerID;
         address payer;
-        // address payable walletPayer;
         string payerID;
         uint256 valorDoBoleto;
         uint256 vencimento;
@@ -53,9 +51,9 @@ contract Boletos {
     
     function cancelarBoleto (bytes32 hashBoleto) public returns(bool) {
         Boleto storage bc = listaDeBoletos[hashBoleto];
-        require(msg.sender == bc.owner || msg.sender == banco, "Somente o Emissor ou Banco pode cancelar um boleto.");
-        require(bc.ativo == true, "Boleto Inativo");
-        require(bc.pagamento == false, "Este boleto ja foi pago.");
+        require(msg.sender == listaDeBoletos[hashBoleto].owner || msg.sender == banco, "Somente o Emissor ou Banco pode cancelar um boleto.");
+        require(listaDeBoletos[hashBoleto].ativo == true, "Boleto Inativo");
+        require(listaDeBoletos[hashBoleto].pagamento == false, "Este boleto ja foi pago.");
         bc.ativo = false;
         return (true);
     }
@@ -90,27 +88,27 @@ contract Boletos {
             uint256 valorAtualizado;  
             valorAtualizado= listaDeBoletos[hashBoleto].valorDoBoleto;
             require (msg.value == valorAtualizado, "Valor incorreto");
+            payable(listaDeBoletos[hashBoleto].owner).transfer(msg.value);
             listaDeBoletos[hashBoleto].payer = msg.sender;
             listaDeBoletos[hashBoleto].payerID = _payerID;
             listaDeBoletos[hashBoleto].dataDoPagamento = block.timestamp;
             listaDeBoletos[hashBoleto].valorPago = msg.value;
             listaDeBoletos[hashBoleto].pagamento = true;
-            // listaDeBoletos[hashBoleto].owner.transfer(msg.value);
-            return(true);
             emit BoletoPago (hashBoleto, listaDeBoletos[hashBoleto].owner, listaDeBoletos[hashBoleto].payer, listaDeBoletos[hashBoleto].valorPago, listaDeBoletos[hashBoleto].dataDoPagamento);
+            return(true);
         }
         else {
             uint256 valorAtualizado; 
             valorAtualizado= listaDeBoletos[hashBoleto].valorDoBoleto+((block.timestamp-listaDeBoletos[hashBoleto].vencimento)/86400)*listaDeBoletos[hashBoleto].jurosDeMora+listaDeBoletos[hashBoleto].multaPorAtraso;
             require (msg.value == valorAtualizado, "Valor incorreto");
+            payable(listaDeBoletos[hashBoleto].owner).transfer(msg.value);
             listaDeBoletos[hashBoleto].payer = msg.sender;
             listaDeBoletos[hashBoleto].payerID = _payerID;
             listaDeBoletos[hashBoleto].dataDoPagamento = block.timestamp;
             listaDeBoletos[hashBoleto].valorPago = msg.value;
             listaDeBoletos[hashBoleto].pagamento = true;
-            // listaDeBoletos[hashBoleto].owner.transfer(msg.value);
-            return(true);
             emit BoletoPago (hashBoleto, listaDeBoletos[hashBoleto].owner, listaDeBoletos[hashBoleto].payer, listaDeBoletos[hashBoleto].valorPago, listaDeBoletos[hashBoleto].dataDoPagamento);
+            return(true);
         }
     }
     
